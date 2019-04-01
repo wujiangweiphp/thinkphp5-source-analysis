@@ -29,6 +29,7 @@
 |_build.php  构建初始应用配置文件
 |_composer.json  composer配置文件
 |_think  框架命令引导shell文件
+|_.env   环境变量配置文件
 </h3>
 </pre>
 
