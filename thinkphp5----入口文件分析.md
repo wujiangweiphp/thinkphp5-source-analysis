@@ -145,11 +145,14 @@ public static function loadComposerAutoloadFiles()
 仿佛是很神奇的就引入进来了，其实不然，我们回过头来看之前`Loader.php`的几个步骤
 
 a. 第一步 将当前类的`autoload`方法注册为系统自动加载函数
+
 b. 第三步`self::addNamespace` 将 
+
 ```php
 'think'    => LIB_PATH . 'think' . DS,`
 ```
 加入命令空间数组
+
 c. `start.php`中第一句声明了命令空间为 `think`
 ```php
 namespace think;
@@ -314,17 +317,17 @@ public static function run(Request $request = null)
 }
 ```
 代码比较长，我们分批进行分析。
+首先我们根据为`null`的参数对`Request`进行了实例化
 
 ```php
 $request = is_null($request) ? Request::instance() : $request;
 ```
-1. 首先我们根据为`null`的参数对`Request`进行了实例化
-
+然后初始化通用配置信息，比如是否开启debug，设置时区，开启钩子之类的
 ```php
 $config = self::initCommon();
 ```
-然后初始化通用配置信息，比如是否开启debug，设置时区，开启钩子之类的
 
+接着根据是否设置常量 `BIND_MODULE` 或者配置了 `auto_bind_module`将绑定的模块和控制器，绑定到路由。这里顺带引入了路由类
 ```php
 // 模块/控制器绑定
 if (defined('BIND_MODULE')) {
@@ -337,13 +340,12 @@ if (defined('BIND_MODULE')) {
     }
 }
 ```
-接着根据是否设置常量 `BIND_MODULE` 或者配置了 `auto_bind_module`将绑定的模块和控制器，绑定到路由。这里顺带引入了路由类
-
+根据配置的`default_filter`对请求参数进行过滤
 ```php
 $request->filter($config['default_filter']);
 ```
-根据配置的`default_filter`对请求参数进行过滤
 
+加载语言包
 ```php
 Lang::range($config['default_lang']);
 // 开启多语言机制 检测当前语言
@@ -356,7 +358,7 @@ Lang::load([
     APP_PATH . 'lang' . DS . $request->langset() . EXT,
 ]);
 ```
-加载语言包
+路由检查并记录调度信息
 
 ```php
 // 监听 app_dispatch
@@ -372,7 +374,7 @@ if (empty($dispatch)) {
 // 记录当前调度信息
 $request->dispatch($dispatch);
 ```
-路由检查并记录调度信息
+请求缓存
 
 ```php
 // 请求缓存检查
@@ -382,17 +384,17 @@ $request->cache(
     $config['request_cache_except']
 );
 ```
-请求缓存
+对调度信息和配置执行获得数据结果
 
 ```php
 $data = self::exec($dispatch, $config);
 ```
-对调度信息和配置执行获得数据结果
+清空实例化
 
 ```php
 Loader::clearInstance();
 ```
-清空实例化
+请求结果实例化成一个 `Response`对象，并返回该对象
 
 ```php
 if ($data instanceof Response) {
@@ -413,7 +415,6 @@ Hook::listen('app_end', $response);
 
 return $response;
 ```
-请求结果实例化成一个 `Response`对象，并返回该对象
 
 到这里，我们就知道了 `send` 方法原来是 `Response`类提供的
 
