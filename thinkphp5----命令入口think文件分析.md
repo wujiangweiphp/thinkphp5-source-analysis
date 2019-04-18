@@ -1,7 +1,7 @@
 # thinkphp5命令入口think文件分析.md 
 
 * [thinkphp5\-\-\-\-命令入口文件分析\.md](#thinkphp5----%E5%91%BD%E4%BB%A4%E5%85%A5%E5%8F%A3%E6%96%87%E4%BB%B6%E5%88%86%E6%9E%90md)
-    * [1\.入口thnik](#1%E5%85%A5%E5%8F%A3thnik)
+    * [1\.入口think](#1%E5%85%A5%E5%8F%A3think)
     * [2\. console\.php](#2-consolephp)
       * [2\.1 应用初始化App::initCommon](#21-%E5%BA%94%E7%94%A8%E5%88%9D%E5%A7%8B%E5%8C%96appinitcommon)
         * [2\.1\.1 初始化self::init](#211-%E5%88%9D%E5%A7%8B%E5%8C%96selfinit)
@@ -11,11 +11,12 @@
         * [2\.2\.3 获取默认的命令getDefaultCommands()](#223-%E8%8E%B7%E5%8F%96%E9%BB%98%E8%AE%A4%E7%9A%84%E5%91%BD%E4%BB%A4getdefaultcommands)
         * [2\.2\.4 加入新命令add(new $command())](#224-%E5%8A%A0%E5%85%A5%E6%96%B0%E5%91%BD%E4%BB%A4addnew-command)
       * [2\.3 run方法](#23-run%E6%96%B9%E6%B3%95)
+        * [2\.3\.0 收集参数和准备输出流](#230-%E6%94%B6%E9%9B%86%E5%8F%82%E6%95%B0%E5%92%8C%E5%87%86%E5%A4%87%E8%BE%93%E5%87%BA%E6%B5%81)
         * [2\.3\.1 configureIO方法](#231-configureio%E6%96%B9%E6%B3%95)
         * [2\.3\.2 doRun方法](#232-dorun%E6%96%B9%E6%B3%95)
         * [2\.3\.3 执行命令doRunCommand](#233-%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4doruncommand)
 
-### 1.入口thnik
+### 1.入口think
 
 ```php
 #!/usr/bin/env php
@@ -557,6 +558,43 @@ public function run()
 }
 ```
 实例化输入`Input`和输出`Output`类,然后配置 `configureIO()` 再调用 `doRun`方法
+
+##### 2.3.0 收集参数和准备输出流
+我们看 `new Input()`做了什么
+```php
+public function __construct($argv = null)
+{
+  if (null === $argv) {
+      $argv = $_SERVER['argv'];
+      // 去除命令名
+      array_shift($argv);
+  }
+  $this->tokens = $argv;
+  $this->definition = new Definition();
+}
+```
+很明显这里是做了 命令行上的参数收集 `$_SERVER['argv']`
+再看看 `new Output()`做了什么
+```php
+public function __construct($driver = 'console')
+{
+  $class = '\\think\\console\\output\\driver\\' . ucwords($driver);
+  $this->handle = new $class($this);
+}
+```
+设置处理类 为'Console'
+```php
+public function __construct(Output $output)
+ {
+     $this->output    = $output;
+     $this->formatter = new Formatter();
+     $this->stdout    = $this->openOutputStream();
+     $decorated       = $this->hasColorSupport($this->stdout);
+     $this->formatter->setDecorated($decorated);
+ }
+```
+处理类做了打开实例化的输出流，并设置显示格式和优化显示，这样我们在输出的时候，就直接使用`$output->write()`写进输出流了
+
 
 ##### 2.3.1 configureIO方法
 
